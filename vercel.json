@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://api-jobfit-kamu.onrender.com/api/:path*"
+      "destination": "https://arielfarz-jobfit-backend.hf.space/api/:path*"
     },
     {
       "source": "/health",
-      "destination": "https://api-jobfit-kamu.onrender.com/health"
+      "destination": "https://arielfarz-jobfit-backend.hf.space/health"
     }
   ]
 }
