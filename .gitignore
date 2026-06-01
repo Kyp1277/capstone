@@ -7,3 +7,4 @@ __pycache__/
 *.log
 backend/.env
 backend/data/processed_jobs_cache.json
+backend/data/jobs_clean.csv
