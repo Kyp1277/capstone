@@ -1,3 +1,12 @@
+---
+title: Jobfit Backend
+emoji: 💼
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+---
+
 # JobFit - AI CV Match Analyzer
 
 JobFit adalah aplikasi full-stack untuk menganalisis CV PDF, menghitung match score, menemukan missing skills, dan memberi rekomendasi pekerjaan berbasis AI. Stack utama proyek ini disesuaikan dengan checklist Dicoding: **Vite**, **Axios**, **Tailwind CSS**, **Express**, **RESTful API**, **PostgreSQL**, dan engine AI Python.
