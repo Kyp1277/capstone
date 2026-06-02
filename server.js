@@ -319,8 +319,17 @@ function validateProductionConfig() {
 }
 
 async function ensureDatabaseSchema() {
-  const schema = fs.readFileSync(path.join(BACKEND_ROOT, "database", "schema.sql"), "utf8");
-  await pool.query(schema);
+  const checkTable = await pool.query(`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = 'users'
+    );
+  `);
+  if (!checkTable.rows[0].exists) {
+    const schema = fs.readFileSync(path.join(BACKEND_ROOT, "database", "schema.sql"), "utf8");
+    await pool.query(schema);
+  }
 }
 
 async function cleanupExpiredRecords() {
