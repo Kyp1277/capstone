@@ -151,7 +151,7 @@ function brandLink() {
   return `
     <a href="#/" class="brand" aria-label="JobFit beranda">
       <span class="brand-mark" aria-hidden="true">
-        <img src="assets/jobfit-logo-mark.png" alt="" width="54" height="42" />
+        <img src="assets/jobfit-logo-mark.svg" alt="" width="54" height="42" />
       </span>
       <span>JobFit</span>
     </a>
