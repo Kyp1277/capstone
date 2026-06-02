@@ -36,7 +36,7 @@ export function renderVerifyOtp() {
           <form class="auth-form" data-auth-form="verify-otp" novalidate>
             <div class="form-field">
               <label for="otpCode">Kode OTP</label>
-              <input class="text-input otp-input" id="otpCode" name="otp" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" />
+              <input class="text-input otp-input" id="otpCode" name="otp" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" value="${escapeHtml(pending?.devOtp || '')}" />
             </div>
 
             <div class="alert alert-error ${state.verification.error ? "visible" : ""}">
