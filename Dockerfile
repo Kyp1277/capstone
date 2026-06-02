@@ -28,7 +28,19 @@ COPY . .
 # Build frontend SPA statis menggunakan Vite
 RUN npm run build
 
+# Di image base node, user dengan UID 1000 sudah ada (bernama 'node').
+# Kita hanya perlu mengubah kepemilikan folder /app ke UID 1000 dan berpindah user.
+RUN chown -R 1000:1000 /app
+USER 1000
+ENV HOME=/home/node
+ENV PATH=/home/node/.local/bin:$PATH
+
+# Pre-download models saat build agar tidak timeout saat request pertama
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'); SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+RUN python -c "import easyocr; easyocr.Reader(['id', 'en'], gpu=False)"
+
 # Port default yang wajib digunakan oleh Hugging Face Spaces adalah 7860
+ENV HOST=0.0.0.0
 EXPOSE 7860
 
 # Jalankan Express API

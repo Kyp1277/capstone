@@ -18,7 +18,7 @@ loadEnvFile(path.join(BACKEND_ROOT, ".env"));
 
 const app = express();
 const port = Number(process.env.PORT || 5000);
-const host = process.env.HOST || "127.0.0.1";
+const host = process.env.HOST || "0.0.0.0";
 const isProduction = ["prod", "production"].includes(String(process.env.APP_ENV || "development").toLowerCase());
 const upload = multer({
   dest: path.join(os.tmpdir(), "jobfit-uploads"),
@@ -244,7 +244,7 @@ app.post("/api/analyses", upload.single("cv"), async (request, response) => {
     sendError(response, error, "Analisis gagal diproses. Coba beberapa saat lagi.");
   } finally {
     if (uploadedPath) {
-      fs.unlink(uploadedPath, () => {});
+      fs.unlink(uploadedPath, () => { });
     }
   }
 });
@@ -386,13 +386,13 @@ async function createOrUpdateUnverifiedUser(name, email, password) {
   const passwordHash = hashPassword(password);
   const result = existing.rows[0]
     ? await pool.query(
-        "UPDATE users SET name = $1, password_hash = $2, updated_at = NOW() WHERE email = $3 RETURNING id, name, email, email_verified, created_at",
-        [name, passwordHash, normalizeEmail(email)]
-      )
+      "UPDATE users SET name = $1, password_hash = $2, updated_at = NOW() WHERE email = $3 RETURNING id, name, email, email_verified, created_at",
+      [name, passwordHash, normalizeEmail(email)]
+    )
     : await pool.query(
-        "INSERT INTO users (name, email, password_hash, email_verified) VALUES ($1, $2, $3, FALSE) RETURNING id, name, email, email_verified, created_at",
-        [name, normalizeEmail(email), passwordHash]
-      );
+      "INSERT INTO users (name, email, password_hash, email_verified) VALUES ($1, $2, $3, FALSE) RETURNING id, name, email, email_verified, created_at",
+      [name, normalizeEmail(email), passwordHash]
+    );
   return publicUser(result.rows[0]);
 }
 
