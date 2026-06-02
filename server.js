@@ -24,8 +24,9 @@ const upload = multer({
   dest: path.join(os.tmpdir(), "jobfit-uploads"),
   limits: { fileSize: Number(process.env.MAX_UPLOAD_SIZE || 5 * 1024 * 1024) }
 });
+const dbUrl = (process.env.DATABASE_URL || process.env.POSTGRES_URL || "").trim();
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL
+  connectionString: dbUrl || undefined
 });
 const rateBuckets = new Map();
 

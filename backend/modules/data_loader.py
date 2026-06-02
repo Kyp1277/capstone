@@ -64,7 +64,7 @@ def _load_jobs_from_postgres(database_url, table_name):
 # LOAD DATASET
 # =========================================
 def load_jobs(file_path):
-    database_url = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+    database_url = (os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or "").strip()
     source = os.environ.get("JOBS_SOURCE", "postgres" if database_url else "csv").strip().lower()
 
     if source in {"postgres", "postgresql", "db", "database"}:

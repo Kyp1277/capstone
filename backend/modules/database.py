@@ -21,7 +21,7 @@ SESSION_TOKEN_PREFIX = "sha256$"
 
 
 def get_database_url():
-    return os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+    return (os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or "").strip()
 
 
 def hash_session_token(token):
