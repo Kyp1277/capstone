@@ -85,7 +85,7 @@ def validate_production_config():
 
 
 DATASET_PATH = ROOT / "data" / "jobs_clean.csv"
-PROCESSED_JOBS_CACHE_PATH = ROOT / "data" / "processed_jobs_cache.json"
+PROCESSED_JOBS_CACHE_PATH = ROOT / "data" / "processed_jobs_cache.json.gz"
 HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = _env_int("PORT", 5000)
 MAX_UPLOAD_SIZE = _env_int("MAX_UPLOAD_SIZE", 5 * 1024 * 1024)

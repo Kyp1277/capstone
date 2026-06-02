@@ -178,7 +178,9 @@ def load_processed_jobs_cache():
         return None
 
     try:
-        payload = json.loads(PROCESSED_JOBS_CACHE_PATH.read_text(encoding="utf-8"))
+        import gzip
+        with gzip.open(PROCESSED_JOBS_CACHE_PATH, "rt", encoding="utf-8") as f:
+            payload = json.load(f)
     except Exception:
         logger.exception("Failed to read processed jobs cache.")
         return None
@@ -206,6 +208,8 @@ def save_processed_jobs_cache(processed_jobs):
     }
 
     try:
-        PROCESSED_JOBS_CACHE_PATH.write_text(json.dumps(payload), encoding="utf-8")
+        import gzip
+        with gzip.open(PROCESSED_JOBS_CACHE_PATH, "wt", encoding="utf-8") as f:
+            json.dump(payload, f)
     except Exception:
         logger.exception("Failed to write processed jobs cache.")
