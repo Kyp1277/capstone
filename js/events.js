@@ -302,6 +302,13 @@ function bindAuthForms() {
       if (result.ok) {
         navigate("/account");
       } else if (result.needsVerification) {
+        if (state.verification.pending?.devOtp) {
+          const verifyResult = await verifyOtp({ otp: state.verification.pending.devOtp });
+          if (verifyResult.ok) {
+            navigate("/account");
+            return;
+          }
+        }
         navigate("/verify-otp");
       } else {
         render();
@@ -321,6 +328,13 @@ function bindAuthForms() {
       });
 
       if (result.ok) {
+        if (result.verification?.devOtp) {
+          const verifyResult = await verifyOtp({ otp: result.verification.devOtp });
+          if (verifyResult.ok) {
+            navigate("/account");
+            return;
+          }
+        }
         navigate("/verify-otp");
       } else {
         render();
