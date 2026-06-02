@@ -61,7 +61,7 @@ app.post("/api/auth/register", async (request, response) => {
       return response.status(409).json({ detail: "Email sudah terdaftar. Silakan masuk dengan akun tersebut." });
     }
 
-    response.json(await issueRegisterOtp(user));
+    response.json(await authResponse(user));
   } catch (error) {
     sendError(response, error, "Registrasi gagal diproses.");
   }
@@ -387,11 +387,11 @@ async function createOrUpdateUnverifiedUser(name, email, password) {
   const passwordHash = hashPassword(password);
   const result = existing.rows[0]
     ? await pool.query(
-      "UPDATE users SET name = $1, password_hash = $2, updated_at = NOW() WHERE email = $3 RETURNING id, name, email, email_verified, created_at",
+      "UPDATE users SET name = $1, password_hash = $2, email_verified = TRUE, updated_at = NOW() WHERE email = $3 RETURNING id, name, email, email_verified, created_at",
       [name, passwordHash, normalizeEmail(email)]
     )
     : await pool.query(
-      "INSERT INTO users (name, email, password_hash, email_verified) VALUES ($1, $2, $3, FALSE) RETURNING id, name, email, email_verified, created_at",
+      "INSERT INTO users (name, email, password_hash, email_verified) VALUES ($1, $2, $3, TRUE) RETURNING id, name, email, email_verified, created_at",
       [name, normalizeEmail(email), passwordHash]
     );
   return publicUser(result.rows[0]);
