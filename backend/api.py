@@ -130,6 +130,12 @@ def startup_event():
     except Exception:
         logger.exception("Database schema setup failed.")
     load_jobs_once()
+    try:
+        logger.info("Pre-warming processed jobs cache during startup...")
+        prepare_jobs_once()
+        logger.info("Processed jobs cache pre-warmed successfully.")
+    except Exception:
+        logger.exception("Failed to pre-warm processed jobs cache during startup.")
 
 
 if __name__ == "__main__":

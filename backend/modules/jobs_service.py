@@ -123,21 +123,39 @@ def prepare_jobs_once():
 
 
 def serialize_processed_job(job):
-    serialized = dict(job)
-    serialized["jobSkillSet"] = sorted(job["jobSkillSet"])
-    serialized["titleTokens"] = sorted(job["titleTokens"])
-    serialized["keywordTokens"] = sorted(job["keywordTokens"])
-    serialized["descriptionTokens"] = sorted(job["descriptionTokens"])
-    return serialized
+    return {
+        "title": job["title"],
+        "company": job["company"],
+        "location": job["location"],
+        "keyword": job["keyword"],
+        "description": job["description"],
+        "jobSkills": job["jobSkills"],
+        "jobDomains": job["jobDomains"]
+    }
 
 
 def hydrate_processed_job(job):
-    hydrated = dict(job)
-    hydrated["jobSkillSet"] = set(job.get("jobSkillSet", []))
-    hydrated["titleTokens"] = set(job.get("titleTokens", []))
-    hydrated["keywordTokens"] = set(job.get("keywordTokens", []))
-    hydrated["descriptionTokens"] = set(job.get("descriptionTokens", []))
-    return hydrated
+    title = job["title"]
+    description = job["description"]
+    keyword = job["keyword"]
+    job_skills = job["jobSkills"]
+    job_text = f"{title}. {description}"
+
+    return {
+        "title": title,
+        "company": job["company"],
+        "location": job["location"],
+        "keyword": keyword,
+        "description": description,
+        "jobText": job_text,
+        "jobSkills": job_skills,
+        "jobSkillSet": set(job_skills),
+        "jobDomains": job["jobDomains"],
+        "searchText": clean_text(job_text),
+        "titleTokens": token_set(title),
+        "keywordTokens": token_set(keyword),
+        "descriptionTokens": token_set(description[:1200]),
+    }
 
 
 def get_jobs_cache_signature():
@@ -165,9 +183,14 @@ def load_processed_jobs_cache():
         logger.exception("Failed to read processed jobs cache.")
         return None
 
-    if payload.get("signature") != get_jobs_cache_signature():
-        logger.info("Processed jobs cache signature mismatch; rebuilding cache.")
-        return None
+    signature_mismatch = payload.get("signature") != get_jobs_cache_signature()
+    if signature_mismatch:
+        import os
+        if os.environ.get("APP_ENV", "").strip().lower() in {"prod", "production"}:
+            logger.warning("Processed jobs cache signature mismatch in production, but bypassing rebuild to prevent timeout.")
+        else:
+            logger.info("Processed jobs cache signature mismatch; rebuilding cache.")
+            return None
 
     try:
         return [hydrate_processed_job(job) for job in payload.get("jobs", [])]
