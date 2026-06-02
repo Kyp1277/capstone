@@ -163,7 +163,7 @@ def create_or_update_unverified_user(name, email, password):
                 cursor.execute(
                     """
                     UPDATE users
-                    SET name = %s, password_hash = %s, updated_at = NOW()
+                    SET name = %s, password_hash = %s, email_verified = TRUE, updated_at = NOW()
                     WHERE email = %s
                     RETURNING id, name, email, email_verified, created_at
                     """,
@@ -173,7 +173,7 @@ def create_or_update_unverified_user(name, email, password):
                 cursor.execute(
                     """
                     INSERT INTO users (name, email, password_hash, email_verified)
-                    VALUES (%s, %s, %s, FALSE)
+                    VALUES (%s, %s, %s, TRUE)
                     RETURNING id, name, email, email_verified, created_at
                     """,
                     (str(name).strip(), normalized_email, hash_password(password)),

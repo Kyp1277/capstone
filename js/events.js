@@ -328,14 +328,7 @@ function bindAuthForms() {
       });
 
       if (result.ok) {
-        if (result.verification?.devOtp) {
-          const verifyResult = await verifyOtp({ otp: result.verification.devOtp });
-          if (verifyResult.ok) {
-            navigate("/account");
-            return;
-          }
-        }
-        navigate("/verify-otp");
+        navigate("/upload");
       } else {
         render();
       }

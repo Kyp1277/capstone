@@ -18,14 +18,10 @@ export async function registerUser({ name, email, password }) {
 
   try {
     const session = await requestAuth("/api/auth/register", payload);
-    setPendingVerification({
-      email: session.email,
-      verificationId: session.verificationId,
-      expiresAt: session.expiresAt,
-      devOtp: session.devOtp || "",
-      otpSent: Boolean(session.otpSent)
-    });
-    return { ok: true, verification: state.verification.pending };
+    setAuthSession(session);
+    await loadRemoteAnalyses();
+    showToast(`Selamat datang, ${session.user?.name || "User"}!`, "success");
+    return { ok: true, user: state.auth.user };
   } catch (error) {
     return setAuthError(apiErrorMessage(error, "Registrasi gagal diproses."));
   }

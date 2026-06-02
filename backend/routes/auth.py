@@ -21,7 +21,7 @@ def register(payload: dict = Body(...)):
         user = database.create_or_update_unverified_user(data["name"], data["email"], data["password"])
         if not user:
             raise HTTPException(status_code=409, detail="Email sudah terdaftar. Silakan masuk dengan akun tersebut.")
-        return auth_service.issue_register_otp(user)
+        return auth_service.auth_response(user)
     except HTTPException:
         raise
     except Exception as error:
