@@ -25,6 +25,9 @@ SEMANTIC_LOAD_FAILED = False
 # job descriptions on every request. Key = first 120 chars of job text.
 _JOB_EMBEDDING_CACHE: dict = {}
 
+# Cache for CV text embeddings to avoid re-encoding the same CV text multiple times in a single request.
+_CV_EMBEDDING_CACHE: dict = {}
+
 # K14: Semaphore to prevent concurrent requests from all calling model.encode()
 # simultaneously, which causes memory pressure on limited-resource servers.
 import threading
@@ -171,7 +174,12 @@ def semantic_similarity(left, right, cache_key=None):
         return cosine_token_score(left, right)
 
     try:
-        left_vec = model.encode(left, convert_to_numpy=True)
+        left_key = left[:120]
+        if left_key in _CV_EMBEDDING_CACHE:
+            left_vec = _CV_EMBEDDING_CACHE[left_key]
+        else:
+            left_vec = model.encode(left, convert_to_numpy=True)
+            _CV_EMBEDDING_CACHE[left_key] = left_vec
 
         # K7: Cache right-side (job) embeddings — only encoded once per unique job
         if cache_key is not None and cache_key in _JOB_EMBEDDING_CACHE:
