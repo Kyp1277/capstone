@@ -10,7 +10,8 @@ export function renderUpload() {
   const currentStep = Math.min(Math.max(Number(state.uploadStep || 1), 1), 3);
 
   if (state.isAnalyzing) {
-    const activeStep = Math.min(Math.max(Number(state.loadingStep || 1), 1), 4);
+    const activeStep = Math.min(Math.max(Number(state.loadingStep || 0), 0), 4);
+    const isWarmingUp = activeStep === 0;
     return shell(`
       <section class="analysis-loading-section" aria-live="polite" aria-busy="true">
         <div class="container analysis-loading-inner">
@@ -18,8 +19,11 @@ export function renderUpload() {
             <img class="analysis-loading-logo" src="assets/jobfit-logo.png" alt="" width="180" height="142" />
           </div>
           <span class="analysis-loading-spinner" aria-hidden="true"></span>
-          <h1>Menganalisis CV Anda</h1>
-          <p>JobFit sedang membaca dokumen, mendeteksi skill, dan mencocokkan rekomendasi pekerjaan.</p>
+          <h1>${isWarmingUp ? "Membangunkan Server AI..." : "Menganalisis CV Anda"}</h1>
+          <p>${isWarmingUp
+            ? "Server sedang dibangunkan dari mode tidur. Ini hanya terjadi sekali, harap tunggu sebentar (10-30 detik)."
+            : "JobFit sedang membaca dokumen, mendeteksi skill, dan mencocokkan rekomendasi pekerjaan."
+          }</p>
           ${renderLoadingSteps(activeStep)}
         </div>
       </section>
@@ -265,20 +269,26 @@ function renderPreflightChecklist({ fileSelected, isAutoMode, target }) {
 }
 
 function renderLoadingSteps(activeStep) {
-  const steps = [
-    "Membaca teks PDF",
-    "Mendeteksi skill dan pengalaman",
-    "Mencocokkan dataset lowongan",
-    "Menyusun dashboard rekomendasi"
+  // step 0 = pre-warm (server wake-up), step 1-4 = normal analysis steps
+  const allSteps = [
+    { label: "Membangunkan server AI", step: 0 },
+    { label: "Membaca teks PDF", step: 1 },
+    { label: "Mendeteksi skill dan pengalaman", step: 2 },
+    { label: "Mencocokkan dataset lowongan", step: 3 },
+    { label: "Menyusun dashboard rekomendasi", step: 4 },
   ];
+
+  // Sembunyikan step 0 setelah pre-warm selesai agar UI tidak terlalu ramai
+  const visibleSteps = activeStep === 0
+    ? allSteps
+    : allSteps.filter((s) => s.step > 0);
 
   return `
     <div class="loading-steps">
-      ${steps
-        .map((step, index) => {
-          const number = index + 1;
-          const stateClass = number < activeStep ? "done" : number === activeStep ? "active" : "";
-          return `<div class="loading-step ${stateClass}"><span>${number < activeStep ? "OK" : number}</span>${escapeHtml(step)}</div>`;
+      ${visibleSteps
+        .map(({ label, step }) => {
+          const stateClass = step < activeStep ? "done" : step === activeStep ? "active" : "";
+          return `<div class="loading-step ${stateClass}"><span>${step < activeStep ? "OK" : step === 0 ? "⏳" : step}</span>${escapeHtml(label)}</div>`;
         })
         .join("")}
     </div>

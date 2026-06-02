@@ -1,6 +1,6 @@
 import { navigate, render } from "./router.js";
 import { replaceAnalyses, saveAnalysis, state } from "./state.js";
-import { apiErrorMessage, http } from "./http.js";
+import { apiErrorMessage, http, httpDirect } from "./http.js";
 import { showToast } from "./utils.js";
 
 // Mengirim CV untuk dianalisis dan mengubah response menjadi data dashboard.
@@ -15,10 +15,21 @@ export async function analyzeCv() {
   }
 
   state.isAnalyzing = true;
-  state.loadingStep = 1;
+  state.loadingStep = 0;   // step 0 = pre-warm phase
   state.error = "";
 
   render();
+
+  // ── Pre-warm: bangunkan HF Space sebelum analisis ──────────────────────────
+  // Hugging Face free tier mematikan container saat idle. Ping /health dulu
+  // agar server aktif sebelum request analisis yang berat dikirim.
+  // Percobaan maksimal 3x dengan jeda 3 detik agar cold start (~30-60 detik) berhasil.
+  await warmupBackend();
+  // ─────────────────────────────────────────────────────────────────────────
+
+  state.loadingStep = 1;
+  render();
+
   const loadingTimer = window.setInterval(() => {
     if (!state.isAnalyzing) {
       window.clearInterval(loadingTimer);
@@ -35,7 +46,9 @@ export async function analyzeCv() {
     formData.append("analysisMode", state.analysisMode);
     formData.append("targetRole", isAutoMode ? "Pekerjaan paling cocok dari CV" : state.targetRole.trim());
 
-    const { data: payload } = await http.post("/api/analyses", formData);
+    // Gunakan httpDirect (langsung ke HF backend) untuk bypass
+    // batas timeout Vercel proxy pada paket gratis.
+    const { data: payload } = await httpDirect.post("/api/analyses", formData);
 
     const analysis = normalizeAnalysisResponse(payload);
     const savedAnalysis = saveAnalysis(analysis);
@@ -63,6 +76,30 @@ export async function analyzeCv() {
     render();
   }
 }
+
+/**
+ * Ping /health langsung ke HF backend untuk membangunkan container yang idle.
+ * Coba maksimal 3x dengan timeout 20 detik per percobaan.
+ * Tidak throw error jika gagal — analisis tetap dilanjutkan.
+ */
+async function warmupBackend() {
+  const MAX_TRIES = 3;
+  const TIMEOUT_MS = 20000;
+
+  for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
+    try {
+      await httpDirect.get("/health", { timeout: TIMEOUT_MS });
+      return; // sukses, server sudah aktif
+    } catch {
+      // Gagal ping — mungkin masih cold start, coba lagi
+      if (attempt < MAX_TRIES) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+    }
+  }
+  // Kalau semua percobaan gagal, lanjut saja — mungkin tetap bisa analisis
+}
+
 
 export async function loadAnalyses() {
   if (!state.auth.token) {

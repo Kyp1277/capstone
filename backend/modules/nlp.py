@@ -1604,7 +1604,7 @@ def extract_profile_with_gemini(text, target_role=None):
         import google.generativeai as genai
         genai.configure(api_key=api_key)
         
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash")
         
         prompt = f"""
         You are an expert ATS (Applicant Tracking System) parser and elite career coach. 
@@ -1625,12 +1625,19 @@ def extract_profile_with_gemini(text, target_role=None):
             - List 3 general CV improvements to make their resume stand out (MUST be written in Indonesian language / Bahasa Indonesia).
             """
             
+        # Truncate CV text to avoid long processing time / timeout
+        truncated_text = text[:4000] if len(text) > 4000 else text
+        
         prompt += f"""
         IMPORTANT: All human-readable output text fields (specifically 'summary' and the items in 'improvements') MUST be written in fluent, professional Indonesian language (Bahasa Indonesia).
         
         Resume text:
-        {text}
+        {truncated_text}
         """
+        
+        # request_options timeout (in seconds) prevents the Gemini call from
+        # hanging indefinitely and triggering the frontend 120s axios timeout.
+        gemini_request_opts = {"timeout": 55}
         
         if _PYDANTIC_AVAILABLE:
             response = model.generate_content(
@@ -1639,6 +1646,7 @@ def extract_profile_with_gemini(text, target_role=None):
                     response_mime_type="application/json",
                     response_schema=GeminiResumeProfile,
                 ),
+                request_options=gemini_request_opts,
             )
             result = json.loads(response.text)
             logger.info("Successfully parsed resume using Gemini API.")
@@ -1650,6 +1658,7 @@ def extract_profile_with_gemini(text, target_role=None):
                 generation_config=genai.GenerationConfig(
                     response_mime_type="application/json"
                 ),
+                request_options=gemini_request_opts,
             )
             result = json.loads(response.text)
             logger.info("Successfully parsed resume using Gemini API (JSON fallback).")

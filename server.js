@@ -659,14 +659,31 @@ function runPythonCommand(script, args) {
     });
     let stdout = "";
     let stderr = "";
+    let settled = false;
+
+    // Kill the Python process after 110 seconds to prevent frontend timeout.
+    // Gemini call inside has 55s timeout, so total should fit well within this.
+    const killTimer = setTimeout(() => {
+      if (!settled) {
+        child.kill("SIGTERM");
+        settled = true;
+        reject(new Error("Analisis membutuhkan waktu terlalu lama. Coba lagi beberapa saat."));
+      }
+    }, 110 * 1000);
+
     child.stdout.on("data", (chunk) => {
       stdout += chunk.toString();
     });
     child.stderr.on("data", (chunk) => {
       stderr += chunk.toString();
     });
-    child.on("error", reject);
+    child.on("error", (err) => {
+      if (!settled) { settled = true; clearTimeout(killTimer); reject(err); }
+    });
     child.on("close", (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(killTimer);
       if (code !== 0) {
         return reject(new Error(stderr || `Python analysis exited with code ${code}`));
       }
