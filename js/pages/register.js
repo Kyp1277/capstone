@@ -16,7 +16,7 @@ export function renderRegister() {
           <div class="auth-highlights">
             <span class="metric-pill"><span class="metric-dot"></span>Nama user</span>
             <span class="metric-pill"><span class="metric-dot"></span>Email unik</span>
-            <span class="metric-pill"><span class="metric-dot"></span>OTP email</span>
+            <span class="metric-pill"><span class="metric-dot"></span>Keamanan password</span>
           </div>
         </div>
 
@@ -40,7 +40,7 @@ export function renderRegister() {
             <div class="form-field">
               <label for="registerPassword">Password</label>
               <input class="text-input" id="registerPassword" name="password" type="password" autocomplete="new-password" placeholder="Minimal 6 karakter" />
-              <span class="helper-text">Setelah daftar, Anda akan menerima kode OTP untuk verifikasi email.</span>
+              <span class="helper-text">Password minimal terdiri dari 6 karakter. Akun akan langsung aktif setelah didaftarkan.</span>
             </div>
 
             <div class="alert alert-error ${state.auth.error ? "visible" : ""}">
