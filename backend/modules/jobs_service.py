@@ -188,14 +188,19 @@ def load_processed_jobs_cache():
         logger.exception("Failed to read processed jobs cache.")
         return None
 
-    signature_mismatch = payload.get("signature") != get_jobs_cache_signature()
+    import os
+    is_prod = os.environ.get("APP_ENV", "").strip().lower() in {"prod", "production"}
+    force_check = os.environ.get("FORCE_CACHE_CHECK", "").strip().lower() in {"true", "1"}
+
+    if is_prod and not force_check:
+        logger.info("Bypassing cache signature check in production.")
+        signature_mismatch = False
+    else:
+        signature_mismatch = payload.get("signature") != get_jobs_cache_signature()
+
     if signature_mismatch:
-        import os
-        if os.environ.get("APP_ENV", "").strip().lower() in {"prod", "production"}:
-            logger.warning("Processed jobs cache signature mismatch in production, but bypassing rebuild to prevent timeout.")
-        else:
-            logger.info("Processed jobs cache signature mismatch; rebuilding cache.")
-            return None
+        logger.info("Processed jobs cache signature mismatch; rebuilding cache.")
+        return None
 
     try:
         return [hydrate_processed_job(job) for job in payload.get("jobs", [])]

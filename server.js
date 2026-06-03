@@ -284,6 +284,16 @@ async function start() {
   await cleanupExpiredRecords();
   app.listen(port, host, () => {
     console.log(`JobFit Express API running at http://${host}:${port}`);
+
+    // Warm up processed jobs cache in the background on startup
+    console.log("Pre-warming processed jobs cache in the background...");
+    runPythonCommand(path.join(BACKEND_ROOT, "scripts", "warm_cache_cli.py"), [], { FORCE_CACHE_CHECK: "true" })
+      .then((output) => {
+        console.log("Processed jobs cache pre-warmed successfully:\n", output);
+      })
+      .catch((err) => {
+        console.error("Failed to pre-warm processed jobs cache:", err.message);
+      });
   });
 }
 
@@ -674,13 +684,14 @@ function runPythonAnalysis(pdfPath, targetRole, analysisMode) {
   ]).then((stdout) => JSON.parse(stdout));
 }
 
-function runPythonCommand(script, args) {
+function runPythonCommand(script, args, extraEnv = {}) {
   return new Promise((resolve, reject) => {
     const python = pythonExecutable();
     const child = spawn(python, [script, ...args], {
       cwd: BACKEND_ROOT,
       env: {
         ...process.env,
+        ...extraEnv,
         PYTHONPATH: [path.join(ROOT, ".codex-python-packages"), BACKEND_ROOT].filter(fs.existsSync).join(path.delimiter)
       }
     });

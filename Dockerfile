@@ -30,7 +30,13 @@ RUN npm run build
 
 # Di image base node, user dengan UID 1000 sudah ada (bernama 'node').
 # Kita buat folder home dan ubah kepemilikan folder /app serta /home/node ke UID 1000.
-RUN mkdir -p /home/node && chown -R 1000:1000 /app /home/node
+ENV HF_HOME=/app/.cache/huggingface
+ENV SENTENCE_TRANSFORMERS_HOME=/app/.cache/sentence_transformers
+ENV TORCH_HOME=/app/.cache/torch
+ENV EASYOCR_MODULE_PATH=/app/.cache/easyocr
+
+RUN mkdir -p /app/.cache/huggingface /app/.cache/sentence_transformers /app/.cache/torch /app/.cache/easyocr /home/node && \
+    chown -R 1000:1000 /app /home/node
 USER 1000
 ENV HOME=/home/node
 ENV PATH=/home/node/.local/bin:$PATH
