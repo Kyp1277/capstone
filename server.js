@@ -250,6 +250,24 @@ app.post("/api/analyses", upload.single("cv"), async (request, response) => {
   }
 });
 
+app.post("/api/logs", (request, response) => {
+  try {
+    enforceRateLimit("logs", request.ip, 10, 10 * 60);
+    const { message, source, lineno, colno, stack } = request.body;
+    const userAgent = request.headers["user-agent"] || "unknown";
+    console.error(
+      `[Client Error] IP: ${request.ip} | UA: ${userAgent}\n` +
+      `Message: ${message}\n` +
+      `Source: ${source}:${lineno}:${colno}\n` +
+      `Stack: ${stack || "No stack trace available"}\n` +
+      `--------------------------------------------------`
+    );
+    response.json({ ok: true });
+  } catch (error) {
+    response.status(error.status || 500).json({ detail: error.message });
+  }
+});
+
 if (isProduction) {
   const distPath = path.join(ROOT, "dist");
   app.use(express.static(distPath));

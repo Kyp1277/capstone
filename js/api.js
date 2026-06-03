@@ -69,6 +69,16 @@ export async function analyzeCv() {
     state.isAnalyzing = false;
     state.loadingStep = 0;
     window.clearInterval(loadingTimer);
+
+    // Kirim detail error ke server log sebelum merender UI alert
+    sendClientLog({
+      message: `Axios / Analysis Failure: ${error.message}`,
+      source: "js/api.js",
+      lineno: 51,
+      colno: 0,
+      stack: error.stack || (error.config ? JSON.stringify(error.config) : "")
+    });
+
     state.error =
       apiErrorMessage(error, "Analisis gagal diproses. Coba beberapa saat lagi.") ||
       "Analisis gagal diproses. Coba beberapa saat lagi.";
@@ -146,4 +156,12 @@ function normalizeAnalysisResponse(payload) {
     jobs: Array.isArray(payload.jobs) ? payload.jobs : [],
     warnings: Array.isArray(payload.warnings) ? payload.warnings : []
   };
+}
+
+export async function sendClientLog(logData) {
+  try {
+    await httpDirect.post("/api/logs", logData);
+  } catch (err) {
+    // Abaikan gagal log agar tidak memicu loop error
+  }
 }
